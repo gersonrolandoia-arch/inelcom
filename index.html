@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>GENERADOR DE TIPIFICACIÓN</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .card {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 12px;
+    padding: 32px;
+    width: 420px;
+    box-shadow: 0 0 30px rgba(0,150,255,0.1);
+  }
+  h2 {
+    color: #00d4ff;
+    margin: 0 0 24px;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  label {
+    color: #aaa;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+  input, select, textarea {
+    width: 100%;
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    border-radius: 6px;
+    color: #fff;
+    padding: 10px 12px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: #00d4ff; }
+  select option { background: #0f3460; }
+  textarea { resize: vertical; min-height: 80px; }
+  button {
+    width: 100%;
+    background: #00d4ff;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+  }
+  button:hover { background: #00b8d9; }
+  .response {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    display: none;
+  }
+  .success { background: rgba(0,255,100,0.1); border: 1px solid #00ff64; color: #00ff64; }
+  .error { background: rgba(255,50,50,0.1); border: 1px solid #ff3232; color: #ff3232; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>🔧 GENERADOR DE TIPIFICACIÓN</h2>
+
+  <label>Nombre Cliente</label>
+  <input type="text" id="nombre_cliente" placeholder="Nombre cliente" />
+
+  <label>CIF</label>
+  <input type="text" id="cif" />
+
+  <label>Teléfono</label>
+  <input type="text" id="telefono" />
+
+  <label>Tipo de Línea</label>
+  <select id="linea_tipo">
+    <option value="mfe">MFE - Movistar Fusión Empresas</option>
+    <option value="ftth">FTTH - Fibra</option>
+    <option value="movil">Móvil</option>
+  </select>
+
+  <label>Tipo de Incidencia</label>
+  <select id="tipo">
+    <option value="conectividad">Conectividad</option>
+    <option value="wifi">WiFi</option>
+    <option value="terminal">Terminal dañado</option>
+    <option value="lentitud">Lentitud</option>
+  </select>
+
+  <label>Síntoma reportado</label>
+  <textarea id="sintoma" placeholder="Ej: luz roja en router, sin navegación..."></textarea>
+
+  <label>Resultado</label>
+  <select id="resultado">
+    <option value="apertura SAM">Apertura SAM</option>
+    <option value="resuelto en llamada">Resuelto en llamada</option>
+    <option value="apertura HECO">Apertura HECO</option>
+    <option value="pendiente validación">Pendiente validación</option>
+  </select>
+
+  <button onclick="enviar()">⚡ Generar Tipificación</button>
+
+  <div class="response" id="respuesta"></div>
+</div>
+
+<script>
+async function enviar() {
+  const datos = {
+    nombre_cliente: document.getElementById('nombre_cliente').value,
+    cif: document.getElementById('cif').value,
+    telefono: document.getElementById('telefono').value,
+    tipo: document.getElementById('tipo').value,
+    linea_tipo: document.getElementById('linea_tipo').value,
+    sintoma: document.getElementById('sintoma').value,
+    resultado: document.getElementById('resultado').value
+  };
+
+  const respuestaEl = document.getElementById('respuesta');
+  respuestaEl.style.display = 'block';
+  respuestaEl.className = 'response';
+  respuestaEl.textContent = '⏳ Generando tipificación...';
+
+  try {
+    const res = await fetch('https://n8n.perualerta.com/webhook-test/ee48c31a-e724-4237-a1fe-088805a81b68', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      respuestaEl.className = 'response success';
+      respuestaEl.innerHTML = `
+        <strong>✅ Tipificación generada:</strong><br><br>
+        <div style="
+          background:#0a2a0a;
+          border:1px solid #00ff64;
+          border-radius:6px;
+          padding:12px;
+          line-height:1.7;
+          cursor:pointer;
+          font-size:13px;
+          color:#00ff64;
+        "
+        onclick="navigator.clipboard.writeText(this.innerText.replace('📋 Clic para copiar','').trim())"
+        title="Clic para copiar">
+          ${data.tipificacion}
+          <br><br>
+          <small style="opacity:0.5">📋 Clic para copiar</small>
+        </div>
+      `;
+    } else {
+      throw new Error('Error ' + res.status);
+    }
+  } catch (err) {
+    respuestaEl.className = 'response error';
+    respuestaEl.textContent = '❌ Error: ' + err.message;
+  }
+}
+</script>
+</body>
+</html>
