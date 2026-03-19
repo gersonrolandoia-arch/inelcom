@@ -138,7 +138,7 @@ async function enviar() {
   respuestaEl.textContent = '⏳ Generando tipificación...';
 
   try {
-    const res = await fetch('https://n8n.perualerta.com/webhook-test/ee48c31a-e724-4237-a1fe-088805a81b68', {
+    const res = await fetch('https://n8n.perualerta.com/webhook/ee48c31a-e724-4237-a1fe-088805a81b68', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(datos)
